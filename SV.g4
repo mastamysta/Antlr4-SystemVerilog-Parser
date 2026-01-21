@@ -1,34 +1,68 @@
 grammar SV;
 
-prog:   (funcs=func)+;
+module          : module_header module_body ENDMODULE;
 
-func:   prot LBRACE (expr ';')+ RBRACE;
+module_header   : MODULE name=SYMNAME LBRACK ports? RBRACK SEMICOLON;
 
-prot:   name=SYMNAME LBRACK argl RBRACK;
+ports           : (port COMMA)* port;
 
-argl:   SYMNAME*;
+port            : INPUT WIRE name=SYMNAME
+                | OUTPUT LOGIC name=SYMNAME
+                ;
 
-expr:   left=expr '/' right=expr # div
+module_body     : module_block*;
+
+module_block    : sync_proc
+                | LOGIC name=SYMNAME
+                | WIRE name=SYMNAME
+                ;
+
+sync_proc       : ALWAYS AT signal_trans BEGIN block_body END;
+
+signal_trans    : LBRACK POSEDGE name=SYMNAME RBRACK;
+
+block_body      : (if_block | statement)*;
+
+if_block        : IF LBRACK expr RBRACK BEGIN (statement)* END;
+
+statement       : block_ops SEMICOLON;
+
+block_ops       : left=SYMNAME BLOCK_ASS right=expr;
+
+expr:   '(' expr ')' # brack  
+    |   left=expr '/' right=expr # div
     |   left=expr '*' right=expr # mul
     |   left=expr '+' right=expr # add
     |   left=expr '-' right=expr # sub
-    |   name=SYMNAME LBRACK (args=expr)* RBRACK # call
+    |   TILDA expr # bitwise_not
+    |   BANG expr # not
     |   INT # lit
-    |   '(' expr ')' # brack
-    |   RETURN expr # ret
-    |   type=TYPE_ID name=SYMNAME # decl
-    |   name=SYMNAME EQUAL expr # ass
     |   name=SYMNAME # var
     ;
 
 WS: [ \t\r\n]+ -> skip;
-TYPE_ID: 'i32';
-RETURN  : 'return';
-NEWLINE : [\r\n]+ ;
-INT     : [0-9]+ ;
-LBRACE  : '{';
-RBRACE  : '}';
-LBRACK  : '(';
-RBRACK  : ')';
-EQUAL   : '=';
-SYMNAME : [a-z]+;
+MODULE      : 'module';
+ENDMODULE   : 'endmodule';
+ALWAYS      : 'always';
+BEGIN       : 'begin';
+END         : 'end';
+POSEDGE     : 'posedge';
+LOGIC       : 'logic';
+WIRE        : 'wire';
+IF          : 'if';
+INPUT       : 'input';
+OUTPUT      : 'output';
+NEWLINE     : [\r\n]+ ;
+INT         : [0-9]+ ;
+LBRACE      : '{';
+RBRACE      : '}';
+LBRACK      : '(';
+RBRACK      : ')';
+BLOCK_ASS   : '<=';
+EQUAL       : '=';
+AT          : '@';
+COMMA       : ',';
+TILDA       : '~';
+BANG        : '!';
+SEMICOLON   : ';';
+SYMNAME     : [a-z]+;

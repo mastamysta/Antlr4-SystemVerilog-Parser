@@ -10,7 +10,7 @@ always @(posedge clk) begin
     out <= ~out;
 
     if (!rstn) begin
-        out <= 1'b1;
+        out <= 1;
     end
 end
 

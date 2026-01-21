@@ -6,6 +6,6 @@ if [ ! -f antlr-4.11.1-complete.jar ]; then
 fi
 
 # Requires a Java install, this is left to the user.
-java -jar ./antlr-4.11.1-complete.jar -Dlanguage=Cpp SV.g4 -o antlr_generated/
+java -jar ./antlr-4.11.1-complete.jar -Dlanguage=Cpp SV.g4 -o antlr_generated/ -visitor
 
 return 0
