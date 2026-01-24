@@ -5,6 +5,7 @@ module foo
     output logic out
 );
 
+logic unused;
 
 always @(posedge clk) begin
     out <= ~out;

@@ -6,24 +6,23 @@ module_header   : MODULE name=SYMNAME LBRACK ports? RBRACK SEMICOLON;
 
 ports           : (port COMMA)* port;
 
-port            : INPUT WIRE name=SYMNAME
-                | OUTPUT LOGIC name=SYMNAME
+port            : INPUT WIRE name=SYMNAME # inwire
+                | OUTPUT LOGIC name=SYMNAME # outreg
                 ;
 
-module_body     : module_block*;
+module_body     : (module_block)*;
 
-module_block    : sync_proc
-                | LOGIC name=SYMNAME
-                | WIRE name=SYMNAME
+module_block    : sync_proc # proc
+                | LOGIC name=SYMNAME SEMICOLON # reg_decl
+                | WIRE name=SYMNAME SEMICOLON # wire_decl
                 ;
 
-sync_proc       : ALWAYS AT signal_trans BEGIN block_body END;
+sync_proc       : ALWAYS AT signal_trans BEGIN block_body* END;
 
 signal_trans    : LBRACK POSEDGE name=SYMNAME RBRACK;
 
-block_body      : (if_block | statement)*;
-
-if_block        : IF LBRACK expr RBRACK BEGIN (statement)* END;
+block_body      : IF LBRACK expr RBRACK BEGIN (block_body)* END # if
+                | statement # stmt;
 
 statement       : block_ops SEMICOLON;
 
