@@ -28,16 +28,16 @@ statement       : block_ops SEMICOLON;
 
 block_ops       : left=SYMNAME BLOCK_ASS right=expr;
 
-expr:   '(' expr ')' # brack  
-    |   left=expr '/' right=expr # div
-    |   left=expr '*' right=expr # mul
-    |   left=expr '+' right=expr # add
-    |   left=expr '-' right=expr # sub
-    |   TILDA expr # bitwise_not
-    |   BANG expr # not
-    |   INT # lit
-    |   name=SYMNAME # var
-    ;
+// expr:   '(' expr ')' # brack  
+    // |   left=expr '/' right=expr # div
+    // |   left=expr '*' right=expr # mul
+    // |   left=expr '+' right=expr # add
+    // |   left=expr '-' right=expr # sub
+expr            :   TILDA expr # bitwise_not
+                |   BANG expr # not
+                |   name=SYMNAME # var
+                |   INT # lit
+                ;
 
 WS: [ \t\r\n]+ -> skip;
 MODULE      : 'module';
