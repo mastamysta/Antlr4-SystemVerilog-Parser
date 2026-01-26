@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 #include <antlr4-runtime.h>
 
@@ -60,11 +61,6 @@ public:
         return {};
     }
 
-    std::any visitProc(SVParser::ProcContext *context) override
-    {
-        return {};
-    }
-
     std::any visitReg_decl(SVParser::Reg_declContext *context) override
     {
         declare_signal<Signal::REG>(context->name->getText(), 1);
@@ -98,22 +94,39 @@ public:
 
     std::any visitIf(SVParser::IfContext *context)
     {
-        // Do something with the condition expression.
-        auto condition_signal_name = context->expr()->accept(this);
+        auto condition_signal_name = std::any_cast<std::string>(context->expr()->accept(this));
+        m_condition_context.push_back(condition_signal_name);
 
         for (const auto block_body: context->block_body())
             block_body->accept(this);
 
+        m_condition_context.pop_back();
         return {};
     }
-
-    std::any visitStmt(SVParser::StmtContext *context)
+ 
+    std::any visitBlock_ass(SVParser::Block_assContext *context) override
     {
-        return {};
-    }
+        const auto assignee_name = std::any_cast<std::string>(context->left->getText());
+        const auto assignment_signal_name = std::any_cast<std::string>(context->right->accept(this));
 
-    std::any visitBlock_ops(SVParser::Block_opsContext *context) override
-    {
+        const auto old_eval_func = m_signals[assignee_name].m_eval;
+        const auto current_condition_context = m_condition_context;
+        
+        m_signals[assignee_name].m_eval = [old_eval_func, current_condition_context, assignment_signal_name](Signal::SignalMap signal_map){
+            if (std::all_of(current_condition_context.cbegin(), current_condition_context.cend(), [&signal_map](std::string condition){
+                return signal_map[condition].m_eval(signal_map) == 1;
+            }))
+            {
+                // If all conditions are met, evaluate the assigned expression as the new value for the signal.
+                return signal_map[assignment_signal_name].m_eval(signal_map);
+            }
+            else
+            {
+                // ...otherwise, just evaluate the pre-existing eval function.
+                return old_eval_func(signal_map);
+            }
+        };
+
         return {};
     }
 
@@ -146,7 +159,7 @@ public:
     {
         auto literal_text = context->INT()->getSymbol()->getText();
 
-        if (!signals.contains(literal_text))
+        if (!m_signals.contains(literal_text))
         {
             auto id = declare_signal<Signal::WIRE>(literal_text, PLACEHOLDER_ONE_BIT);
             auto literal_value = std::stoul(literal_text);
@@ -163,7 +176,7 @@ public:
     {
         auto signal_name = context->name->getText();
 
-        if (!signals.contains(signal_name))
+        if (!m_signals.contains(signal_name))
         {
             std::cout << "ERROR: Reference to undefined signal " << signal_name << std::endl;
             return {};
@@ -177,12 +190,12 @@ public:
         auto inner_signal_name = std::any_cast<std::string>(context->expr()->accept(this));
         auto not_signal_name = "not_" + inner_signal_name;
 
-        if (!signals.contains(not_signal_name))
+        if (!m_signals.contains(not_signal_name))
         {
             auto id = declare_signal<Signal::WIRE>(not_signal_name, PLACEHOLDER_ONE_BIT);
 
-            assign_signal(not_signal_name, [inner_signal_name](Signal::SignalMap signals){ 
-                return !(signals[inner_signal_name].m_eval(signals)); 
+            assign_signal(not_signal_name, [inner_signal_name](Signal::SignalMap m_signals){ 
+                return !(m_signals[inner_signal_name].m_eval(m_signals)); 
             });
         }
 
@@ -194,21 +207,16 @@ public:
         auto inner_signal_name = std::any_cast<std::string>(context->expr()->accept(this));
         auto bnot_signal_name = "bitwise_not_" + inner_signal_name;
 
-        if (!signals.contains(bnot_signal_name))
+        if (!m_signals.contains(bnot_signal_name))
         {
             auto id = declare_signal<Signal::WIRE>(bnot_signal_name, PLACEHOLDER_ONE_BIT);
 
-            assign_signal(bnot_signal_name, [inner_signal_name](Signal::SignalMap signals){ 
-                return ~(signals[inner_signal_name].m_eval(signals)); 
+            assign_signal(bnot_signal_name, [inner_signal_name](Signal::SignalMap m_signals){ 
+                return ~(m_signals[inner_signal_name].m_eval(m_signals)); 
             });
         }
 
         return bnot_signal_name;
-    }
-
-    std::any visitStatement(SVParser::StatementContext *context) override
-    {
-        return {};
     }
 
     void visitDesign()
@@ -228,9 +236,10 @@ public:
     }
 
 private:
-    Signal::SignalMap signals;
+    Signal::SignalMap m_signals;
+    Signal::SignalID m_next_signal_id = 0;
 
-    Signal::SignalID next_signal_id = 0;
+    std::vector<std::string> m_condition_context;
 
     template <Signal::SignalType Type>
     Signal::SignalID declare_signal(const std::string& name, const std::size_t width)
@@ -238,14 +247,14 @@ private:
         if constexpr (DebugMessages)
             std::cout << "Instance of signal " << name << std::endl;
 
-        signals[name] = {next_signal_id, {}, Type};
+        m_signals[name] = {m_next_signal_id, {}, Type};
 
-        return next_signal_id++;
+        return m_next_signal_id++;
     }
 
     void assign_signal(const std::string& name, Signal::SignalEvaluationFunction eval)
     {
-        signals[name].m_eval = eval;
+        m_signals[name].m_eval = eval;
     }
 };
 
