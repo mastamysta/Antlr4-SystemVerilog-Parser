@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <vector>
 
 struct Signal
 {
@@ -18,4 +19,6 @@ struct Signal
     SignalID m_id;
     SignalEvaluationFunction m_eval;
     SignalType m_type;
+    std::set<std::string> m_dependent_signals;
+    SignalEvaluationFunction m_next_value;
 };

@@ -89,6 +89,7 @@ public:
     {
         // This really just needs to specify what event to listen to for any
         // following assignments.
+        m_sensitivity_context = context->name->getText();
         return {};
     }
 
@@ -109,23 +110,27 @@ public:
         const auto assignee_name = std::any_cast<std::string>(context->left->getText());
         const auto assignment_signal_name = std::any_cast<std::string>(context->right->accept(this));
 
-        const auto old_eval_func = m_signals[assignee_name].m_eval;
+        const auto old_next_val_func = m_signals[assignee_name].m_next_value;
         const auto current_condition_context = m_condition_context;
         
-        m_signals[assignee_name].m_eval = [old_eval_func, current_condition_context, assignment_signal_name](Signal::SignalMap signal_map){
-            if (std::all_of(current_condition_context.cbegin(), current_condition_context.cend(), [&signal_map](std::string condition){
+        m_signals[assignee_name].m_next_value = [assignee_name, old_next_val_func, current_condition_context, assignment_signal_name](Signal::SignalMap signal_map){
+            if (std::all_of(current_condition_context.cbegin(), current_condition_context.cend(), [assignee_name, &signal_map](std::string condition){
                 return signal_map[condition].m_eval(signal_map) == 1;
             }))
             {
                 // If all conditions are met, evaluate the assigned expression as the new value for the signal.
+                std::cout << assignee_name << " is " << assignment_signal_name << std::endl;
                 return signal_map[assignment_signal_name].m_eval(signal_map);
             }
             else
             {
                 // ...otherwise, just evaluate the pre-existing eval function.
-                return old_eval_func(signal_map);
+                std::cout << "Calling off condition " << std::endl;
+                return old_next_val_func(signal_map);
             }
         };
+
+        m_signals[m_sensitivity_context].m_dependent_signals.insert(assignee_name);
 
         return {};
     }
@@ -211,8 +216,10 @@ public:
         {
             auto id = declare_signal<Signal::WIRE>(bnot_signal_name, PLACEHOLDER_ONE_BIT);
 
-            assign_signal(bnot_signal_name, [inner_signal_name](Signal::SignalMap m_signals){ 
-                return ~(m_signals[inner_signal_name].m_eval(m_signals)); 
+            // TODO: For now we mask the upper bits of the signal, because we only accept single-bit
+            // signals.
+            assign_signal(bnot_signal_name, [inner_signal_name](Signal::SignalMap m_signals){
+                return ~(m_signals[inner_signal_name].m_eval(m_signals)) & 0x1;
             });
         }
 
@@ -235,11 +242,17 @@ public:
         visitModule(tree);
     }
 
+    const auto& get_signals() const
+    {
+        return m_signals;
+    }
+
 private:
     Signal::SignalMap m_signals;
     Signal::SignalID m_next_signal_id = 0;
 
     std::vector<std::string> m_condition_context;
+    std::string m_sensitivity_context;
 
     template <Signal::SignalType Type>
     Signal::SignalID declare_signal(const std::string& name, const std::size_t width)
