@@ -13,3 +13,6 @@ target_include_directories(sv_parser PUBLIC antlr_generated)
 target_link_libraries(sv_parser PUBLIC antlr4_static)
 
 add_subdirectory(src)
+
+add_executable(sim_main sim_main.cpp)
+target_link_libraries(sim_main PUBLIC compiler simulator)

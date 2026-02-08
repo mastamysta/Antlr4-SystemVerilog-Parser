@@ -1,2 +1,0 @@
-add_executable(test_antlr sim_main.cpp)
-target_link_libraries(test_antlr PUBLIC compiler simulator)
