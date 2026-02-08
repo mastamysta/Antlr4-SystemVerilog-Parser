@@ -11,7 +11,10 @@
 
 #include "Signal.hpp"
 
-static constexpr Signal::SignalWidth PLACEHOLDER_ONE_BIT = 1;
+namespace simulator
+{
+
+static constexpr SignalWidth PLACEHOLDER_ONE_BIT = 1;
 
 template <bool DebugMessages>
 class ModuleVisitorImpl : public SVVisitor
@@ -41,14 +44,14 @@ public:
 
     std::any visitInwire(SVParser::InwireContext *context) override
     {
-        declare_signal<Signal::WIRE>(context->name->getText(), PLACEHOLDER_ONE_BIT);
+        declare_signal<SignalType::WIRE>(context->name->getText(), PLACEHOLDER_ONE_BIT);
 
         return {};
     }
 
     std::any visitOutreg(SVParser::OutregContext *context) override
     {
-        declare_signal<Signal::REG>(context->name->getText(), PLACEHOLDER_ONE_BIT);
+        declare_signal<SignalType::REG>(context->name->getText(), PLACEHOLDER_ONE_BIT);
 
         return {};
     }
@@ -63,14 +66,14 @@ public:
 
     std::any visitReg_decl(SVParser::Reg_declContext *context) override
     {
-        declare_signal<Signal::REG>(context->name->getText(), 1);
+        declare_signal<SignalType::REG>(context->name->getText(), 1);
 
         return {};
     }
 
     std::any visitWire_decl(SVParser::Wire_declContext *context) override
     {
-        declare_signal<Signal::WIRE>(context->name->getText(), 1);
+        declare_signal<SignalType::WIRE>(context->name->getText(), 1);
 
         return {};
     }
@@ -113,7 +116,7 @@ public:
         const auto old_next_val_func = m_signals[assignee_name].m_next_value;
         const auto current_condition_context = m_condition_context;
         
-        m_signals[assignee_name].m_next_value = [assignee_name, old_next_val_func, current_condition_context, assignment_signal_name](Signal::SignalMap signal_map){
+        m_signals[assignee_name].m_next_value = [assignee_name, old_next_val_func, current_condition_context, assignment_signal_name](SignalMap signal_map){
             if (std::all_of(current_condition_context.cbegin(), current_condition_context.cend(), [assignee_name, &signal_map](std::string condition){
                 return signal_map[condition].m_eval(signal_map) == 1;
             }))
@@ -166,10 +169,10 @@ public:
 
         if (!m_signals.contains(literal_text))
         {
-            auto id = declare_signal<Signal::WIRE>(literal_text, PLACEHOLDER_ONE_BIT);
+            auto id = declare_signal<SignalType::WIRE>(literal_text, PLACEHOLDER_ONE_BIT);
             auto literal_value = std::stoul(literal_text);
 
-            assign_signal(literal_text, [literal_value](Signal::SignalMap){ 
+            assign_signal(literal_text, [literal_value](SignalMap){ 
                 return literal_value; 
             });
         }
@@ -197,9 +200,9 @@ public:
 
         if (!m_signals.contains(not_signal_name))
         {
-            auto id = declare_signal<Signal::WIRE>(not_signal_name, PLACEHOLDER_ONE_BIT);
+            auto id = declare_signal<SignalType::WIRE>(not_signal_name, PLACEHOLDER_ONE_BIT);
 
-            assign_signal(not_signal_name, [inner_signal_name](Signal::SignalMap m_signals){ 
+            assign_signal(not_signal_name, [inner_signal_name](SignalMap m_signals){ 
                 return !(m_signals[inner_signal_name].m_eval(m_signals)); 
             });
         }
@@ -214,11 +217,11 @@ public:
 
         if (!m_signals.contains(bnot_signal_name))
         {
-            auto id = declare_signal<Signal::WIRE>(bnot_signal_name, PLACEHOLDER_ONE_BIT);
+            auto id = declare_signal<SignalType::WIRE>(bnot_signal_name, PLACEHOLDER_ONE_BIT);
 
             // TODO: For now we mask the upper bits of the signal, because we only accept single-bit
             // signals.
-            assign_signal(bnot_signal_name, [inner_signal_name](Signal::SignalMap m_signals){
+            assign_signal(bnot_signal_name, [inner_signal_name](SignalMap m_signals){
                 return ~(m_signals[inner_signal_name].m_eval(m_signals)) & 0x1;
             });
         }
@@ -248,14 +251,14 @@ public:
     }
 
 private:
-    Signal::SignalMap m_signals;
-    Signal::SignalID m_next_signal_id = 0;
+    SignalMap m_signals;
+    SignalID m_next_signal_id = 0;
 
     std::vector<std::string> m_condition_context;
     std::string m_sensitivity_context;
 
-    template <Signal::SignalType Type>
-    Signal::SignalID declare_signal(const std::string& name, const std::size_t width)
+    template <SignalType Type>
+    SignalID declare_signal(const std::string& name, const std::size_t width)
     {
         if constexpr (DebugMessages)
             std::cout << "Instance of signal " << name << std::endl;
@@ -265,7 +268,7 @@ private:
         return m_next_signal_id++;
     }
 
-    void assign_signal(const std::string& name, Signal::SignalEvaluationFunction eval)
+    void assign_signal(const std::string& name, SignalEvaluationFunction eval)
     {
         m_signals[name].m_eval = eval;
     }
@@ -273,3 +276,5 @@ private:
 
 using ModuleVisitorDebug = ModuleVisitorImpl<true>;
 using ModuleVisitor = ModuleVisitorImpl<false>;
+
+}

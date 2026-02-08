@@ -5,7 +5,7 @@
 
 int main(const int argc, const char *argv[])
 {
-    auto visitor = ModuleVisitorDebug{};
+    auto visitor = simulator::ModuleVisitorDebug{};
     visitor.visitDesign();
 
     auto signals = visitor.get_signals();
@@ -13,7 +13,7 @@ int main(const int argc, const char *argv[])
     for (const auto& sig: signals)
         std::cout << sig.first << std::endl;
 
-    auto simulator = ModuleSimulator{signals};
+    auto simulator = simulator::ModuleSimulator{signals};
 
     simulator.simulate(10);
 
