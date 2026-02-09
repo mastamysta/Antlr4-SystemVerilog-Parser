@@ -7,10 +7,8 @@ namespace simulator
 
 
 ModuleSimulator::ModuleSimulator(const SignalMap& signals): 
-                                        m_signals_a(signals),
-                                        m_signals_b(signals),
-                                        m_state(signals)
-{ 
+    m_state(signals)
+{
 }
 
 void ModuleSimulator::simulate(std::size_t cycles)
@@ -35,13 +33,6 @@ void ModuleSimulator::advance_time()
     int curr_clk = m_clk_val;
 
     m_state.immediate_assign("clk", m_clk_val);
-
-    for (const auto& dependent: m_state.get_dependent_signals("clk"))
-    {
-        m_state.evolve_signal(dependent);
-    }
-
-    m_state.retire_changes();
 
     ++m_time;
     m_clk_val = !m_clk_val;

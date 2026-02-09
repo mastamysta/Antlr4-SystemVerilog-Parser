@@ -8,10 +8,19 @@ module foo
 logic unused;
 
 always @(posedge clk) begin
-    out <= ~out;
+    out <= unused;
 
     if (!rstn) begin
         out <= 1;
+    end
+end
+
+always @(posedge out) begin
+    
+    unused <= ~out;
+
+    if (!rstn) begin
+        unused <= 1;
     end
 end
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "Signal.hpp"
 
 namespace simulator
@@ -23,6 +25,10 @@ private:
 
     SignalMap m_current_state;
     SignalMap m_next_state;
+
+    std::set<std::string> m_buffered_signals;
+
+    auto evolve_dependents_of_retirees(const std::set<std::string>&) -> void;
 
 };
 
