@@ -88,6 +88,14 @@ public:
         return {};
     }
 
+    std::any visitInitial_proc(SVParser::Initial_procContext *context) override
+    {
+        // TODO: Convert this visitor into an AST generator. Then we can visit upon the AST
+        // to generate structures for initial blocks *separately* to signal validation and
+        // sensitivity construction.
+        return {};
+    }
+
     std::any visitSignal_trans(SVParser::Signal_transContext *context) override
     {
         // This really just needs to specify what event to listen to for any
@@ -135,6 +143,11 @@ public:
 
         m_signals[m_sensitivity_context].m_dependent_signals.insert(assignee_name);
 
+        return {};
+    }
+
+    std::any visitNon_block_ass(SVParser::Non_block_assContext *context) override
+    {
         return {};
     }
 

@@ -13,6 +13,7 @@ port            : INPUT WIRE name=SYMNAME # inwire
 module_body     : (module_block)*;
 
 module_block    : ALWAYS AT signal_trans BEGIN block_body* END # sync_proc
+                | INITIAL BEGIN block_body* END # initial_proc
                 | LOGIC name=SYMNAME SEMICOLON # reg_decl
                 | WIRE name=SYMNAME SEMICOLON # wire_decl
                 ;
@@ -20,7 +21,9 @@ module_block    : ALWAYS AT signal_trans BEGIN block_body* END # sync_proc
 signal_trans    : LBRACK POSEDGE name=SYMNAME RBRACK;
 
 block_body      : IF LBRACK expr RBRACK BEGIN (block_body)* END # if
-                | left=SYMNAME BLOCK_ASS right=expr SEMICOLON # block_ass;
+                | left=SYMNAME BLOCK_ASS right=expr SEMICOLON # block_ass
+                | left=SYMNAME EQUAL right=expr # non_block_ass
+                ;
 
 expr            :   '(' expr ')' # brack
                 |   TILDA expr # bitwise_not
@@ -37,6 +40,7 @@ WS: [ \t\r\n]+ -> skip;
 MODULE      : 'module';
 ENDMODULE   : 'endmodule';
 ALWAYS      : 'always';
+INITIAL      : 'initial';
 BEGIN       : 'begin';
 END         : 'end';
 POSEDGE     : 'posedge';
