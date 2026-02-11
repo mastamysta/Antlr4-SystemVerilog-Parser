@@ -32,7 +32,7 @@ auto SimulationState::retire_changes() -> void
         return;
 
     const auto buffered_signals_copy = std::move(m_buffered_signals);
-    m_buffered_signals.clear();
+    m_buffered_signals = {};
 
     evolve_dependents_of_retirees(buffered_signals_copy);
 }
