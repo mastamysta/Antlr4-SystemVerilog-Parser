@@ -22,13 +22,13 @@ signal_trans    : LBRACK POSEDGE name=SYMNAME RBRACK;
 block_body      : IF LBRACK expr RBRACK BEGIN (block_body)* END # if
                 | left=SYMNAME BLOCK_ASS right=expr SEMICOLON # block_ass;
 
-// expr:   '(' expr ')' # brack  
-    // |   left=expr '/' right=expr # div
-    // |   left=expr '*' right=expr # mul
-    // |   left=expr '+' right=expr # add
-    // |   left=expr '-' right=expr # sub
-expr            :   TILDA expr # bitwise_not
+expr            :   '(' expr ')' # brack
+                |   TILDA expr # bitwise_not
                 |   BANG expr # not
+                |   left=expr '/' right=expr # div
+                |   left=expr '*' right=expr # mul
+                |   left=expr '+' right=expr # add
+                |   left=expr '-' right=expr # sub
                 |   name=SYMNAME # var
                 |   INT # lit
                 ;

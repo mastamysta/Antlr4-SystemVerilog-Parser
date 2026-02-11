@@ -138,30 +138,30 @@ public:
         return {};
     }
 
-    // std::any visitDiv(SVParser::DivContext *context) override
-    // {
-    //     return {};
-    // }
+    std::any visitBrack(SVParser::BrackContext *context) override
+    {
+        return {};
+    }
 
-    // std::any visitAdd(SVParser::AddContext *context) override
-    // {
-    //     return {};
-    // }
+    std::any visitDiv(SVParser::DivContext *context) override
+    {
+        return {};
+    }
 
-    // std::any visitSub(SVParser::SubContext *context) override
-    // {
-    //     return {};
-    // }
+    std::any visitAdd(SVParser::AddContext *context) override
+    {
+        return {};
+    }
 
-    // std::any visitBrack(SVParser::BrackContext *context) override
-    // {
-    //     return {};
-    // }
+    std::any visitSub(SVParser::SubContext *context) override
+    {
+        return {};
+    }
 
-    // std::any visitMul(SVParser::MulContext *context) override
-    // {
-    //     return {};
-    // }
+    std::any visitMul(SVParser::MulContext *context) override
+    {
+        return {};
+    }
 
     std::any visitLit(SVParser::LitContext *context) override
     {
