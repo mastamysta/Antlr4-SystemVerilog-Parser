@@ -16,3 +16,6 @@ add_subdirectory(src)
 
 add_executable(sim_main sim_main.cpp)
 target_link_libraries(sim_main PUBLIC compiler simulator)
+
+add_executable(new_ast_gen new_ast_gen_demo.cpp)
+target_link_libraries(new_ast_gen PUBLIC compiler)
