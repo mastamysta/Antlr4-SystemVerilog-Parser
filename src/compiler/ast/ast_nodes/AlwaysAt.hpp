@@ -3,6 +3,7 @@
 #include <string>
 
 #include "Sensitivity.hpp"
+#include "Statement.hpp"
 
 namespace simulator
 {
@@ -15,6 +16,9 @@ struct AlwaysAt
     {
 
     }
+
+    std::vector<If> ifs;
+    std::vector<Assignment> assignments;
 
     Sensitivity m_sensitivity;
 };

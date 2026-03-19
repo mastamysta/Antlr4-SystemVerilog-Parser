@@ -150,6 +150,7 @@ public:
 
     std::any visitIf(SVParser::IfContext *context)
     {
+        auto statement = If{};
         auto condition_signal_name = std::any_cast<std::string>(context->expr()->accept(this));
 
         for (const auto block_body: context->block_body())

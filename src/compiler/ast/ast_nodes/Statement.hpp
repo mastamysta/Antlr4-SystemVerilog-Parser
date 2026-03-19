@@ -1,26 +1,31 @@
 #pragma once
 
 #include <variant>
+#include <vector>
+#include <utility>
+
+#include "Expression.hpp"
 
 namespace simulator
 {
 
 struct Assignment
 {
-
+    SignalReference m_target;
+    Expression m_assigned_expression;
 };
 
 struct If
 {
-    explicit If(std::string condition,
+    explicit If(Expression&& condition,
                 std::vector<Assignment> assignments):
-        m_condition{condition},
+        m_condition{std::move(condition)},
         m_assignments{assignments}
     {
         
     }
 
-    std::string m_condition;
+    Expression m_condition;
     std::vector<Assignment> m_assignments;
 };
 

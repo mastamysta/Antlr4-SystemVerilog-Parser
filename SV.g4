@@ -18,9 +18,9 @@ module_block    : ALWAYS AT signal_trans BEGIN block_body* END # sync_proc
                 | WIRE name=SYMNAME SEMICOLON # wire_decl
                 ;
 
-signal_trans    : LBRACK POSEDGE name=SYMNAME RBRACK;
+signal_trans    : LBRACK POSEDGE sensitivity=expr RBRACK;
 
-block_body      : IF LBRACK expr RBRACK BEGIN (block_body)* END # if
+block_body      : IF LBRACK condition=expr RBRACK BEGIN (block_body)* END # if
                 | left=SYMNAME BLOCK_ASS right=expr SEMICOLON # block_ass
                 | left=SYMNAME EQUAL right=expr # non_block_ass
                 ;

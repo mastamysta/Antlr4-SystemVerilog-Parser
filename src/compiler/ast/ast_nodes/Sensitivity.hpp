@@ -1,6 +1,8 @@
 #pragma once
 
-#include <string>
+#include <utility>
+
+#include "Expression.hpp"
 
 namespace simulator
 {
@@ -13,16 +15,16 @@ enum class SensitivityType
 
 struct Sensitivity
 {
-    explicit Sensitivity(std::string signal,
+    explicit Sensitivity(Expression&& sens_expression,
                          SensitivityType sensitivity_type):
         m_sensitivity_type{sensitivity_type},
-        m_signal{signal}
+        m_sens_expression{std::move(sens_expression)}
     {
         
     }
 
     SensitivityType m_sensitivity_type;
-    std::string m_signal;
+    Expression m_sens_expression;
 };
 
 }
